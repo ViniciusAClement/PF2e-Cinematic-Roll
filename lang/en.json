@@ -1,0 +1,59 @@
+{
+    "PF2E_CINEMATICROLLS": {
+        "Title": "Cinematic Rolls",
+        "Fields": {
+            "DC": "DC",
+            "SecretTest": "Secret Test"
+        },
+        "Sections": {
+            "Skills": "Skills",
+            "Saves": "Saving Throws",
+            "Actors": "Online Players"
+        },
+        "Actions": {
+            "Confirm": "Confirm",
+            "Cancel": "Cancel",
+            "Roll": "Roll"
+        },
+        "Warnings": {
+            "InvalidDC": "Enter a positive integer DC.",
+            "MissingStatistic": "Choose a skill or saving throw.",
+            "MissingActor": "Select at least one Actor."
+        },
+        "Messages": {
+            "NoOnlineActors": "No online player characters were found."
+        },
+        "Console": {
+            "Configuration": "Cinematic Rolls | Configuration:",
+            "Results": "Cinematic Rolls | Results:",
+            "Requests": "Cinematic Rolls | Requests sent:"
+        },
+        "PlayerRequest": {
+            "Title": "Roll request",
+            "Message": "You have been asked to make the following check:"
+        },
+        "Skills": {
+            "Athletics": "Athletics",
+            "Arcana": "Arcana",
+            "Acrobatics": "Acrobatics",
+            "Diplomacy": "Diplomacy",
+            "Stealth": "Stealth",
+            "Deception": "Deception",
+            "Intimidation": "Intimidation",
+            "Thievery": "Thievery",
+            "Crafting": "Crafting",
+            "Medicine": "Medicine",
+            "Nature": "Nature",
+            "Occultism": "Occultism",
+            "Performance": "Performance",
+            "Religion": "Religion",
+            "Survival": "Survival",
+            "Society": "Society"
+        },
+        "Saves": {
+            "Fortitude": "Fortitude",
+            "Reflex": "Reflex",
+            "Will": "Will"
+        }
+    }
+}

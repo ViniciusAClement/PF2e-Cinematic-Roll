@@ -1,22 +1,41 @@
 import { rollForSelectedActors } from "./roll-service.js";
 
+/**
+ * Resolves a localization key and falls back to the supplied English text.
+ *
+ * @param {string} key Localization key.
+ * @param {string} fallback Text returned when the key is unavailable.
+ * @returns {string} Localized or fallback text.
+ */
 function localize(key, fallback) {
     const localized = game.i18n.localize(key);
     return localized === key ? fallback : localized;
 }
 
+/**
+ * Escapes a value before it is inserted into generated HTML.
+ *
+ * @param {*} value Value to escape.
+ * @returns {string} HTML-safe string.
+ */
 function escapeHtml(value) {
     return foundry.utils.escapeHTML(String(value ?? ""));
 }
 
 const handledRequestIds = new Set();
 
+/**
+ * Opens the player-facing dialog for a pending roll request.
+ *
+ * @param {object} request Roll request received through the module socket.
+ * @returns {void}
+ */
 function openPlayerRollRequest(request) {
     const actor = game.actors.get(request.actorId);
 
     if (!actor) {
         console.warn(
-            `Cinematic Rolls | Actor ${request.actorId} não encontrado neste cliente.`
+                `Cinematic Rolls | Actor ${request.actorId} was not found on this client.`
         );
         return;
     }
@@ -27,7 +46,7 @@ function openPlayerRollRequest(request) {
         window: {
             title: localize(
                 "PF2E_CINEMATICROLLS.PlayerRequest.Title",
-                "Teste solicitado"
+                "Roll request"
             )
         },
         content: `
@@ -35,7 +54,7 @@ function openPlayerRollRequest(request) {
                 <p>
                     ${localize(
                         "PF2E_CINEMATICROLLS.PlayerRequest.Message",
-                        "Você precisa realizar o seguinte teste:"
+                        "You have been asked to make the following check:"
                     )}
                 </p>
                 <strong>${escapeHtml(request.statisticLabel)}</strong>
@@ -47,7 +66,7 @@ function openPlayerRollRequest(request) {
                 action: "roll",
                 label: localize(
                     "PF2E_CINEMATICROLLS.Actions.Roll",
-                    "Rolar"
+                    "Roll"
                 ),
                 default: true,
                 callback: async () => {
@@ -57,7 +76,8 @@ function openPlayerRollRequest(request) {
                     const [result] = await rollForSelectedActors(
                         [request.actorId],
                         request.statisticSlug,
-                        request.dc
+                        request.dc,
+                        request.secret
                     );
 
                     game.socket.emit("module.pf2e-cinematicrolls", {
@@ -75,18 +95,20 @@ function openPlayerRollRequest(request) {
 }
 
 /**
- * Registra o canal de comunicação entre o GM e os jogadores.
+ * Registers the socket channel used to communicate between the GM and players.
+ *
+ * @returns {void}
  */
 export function registerRequestSocket() {
     console.log(
-        "Cinematic Rolls | Socket registrado para o usuário:",
+        "Cinematic Rolls | Socket registered for user:",
         game.user.id
     );
 
     game.socket.on("module.pf2e-cinematicrolls", request => {
         if (request.type === "roll-request") {
             console.log(
-                "Cinematic Rolls | Pedido recebido:",
+                "Cinematic Rolls | Request received:",
                 request
             );
 
@@ -106,7 +128,7 @@ export function registerRequestSocket() {
                 return;
             }
             console.log(
-                "Cinematic Rolls | Resultado recebido do jogador:",
+                "Cinematic Rolls | Result received from player:",
                 request.result
             );
         }
@@ -114,13 +136,21 @@ export function registerRequestSocket() {
 }
 
 /**
- * Envia um pedido individual para cada Actor selecionado.
+ * Sends an individual roll request for each selected Actor.
+ *
+ * @param {string[]} actorIds Selected Actor IDs.
+ * @param {string} statisticSlug PF2e skill or saving throw slug.
+ * @param {string} statisticLabel Human-readable statistic label.
+ * @param {number} dc Positive integer difficulty class.
+ * @param {boolean} secret Whether the check result should be visible only to the GM.
+ * @returns {void}
  */
 export function requestRollsForSelectedActors(
     actorIds,
     statisticSlug,
     statisticLabel,
-    dc
+    dc,
+    secret
 ) {
     const usersByActor = new Map();
 
@@ -134,7 +164,7 @@ export function requestRollsForSelectedActors(
 
         if (!user) {
             console.warn(
-                `Cinematic Rolls | Nenhum jogador online encontrado para o Actor ${actorId}.`
+                `Cinematic Rolls | No online player found for Actor ${actorId}.`
             );
             continue;
         }
@@ -147,11 +177,12 @@ export function requestRollsForSelectedActors(
             actorId,
             statisticSlug,
             statisticLabel,
-            dc
+            dc,
+            secret
         };
 
         console.log(
-            "Cinematic Rolls | Pedido enviado:",
+            "Cinematic Rolls | Request sent:",
             request
         );
 

@@ -2,11 +2,25 @@ import { SAVING_THROWS, SKILLS } from "./constants.js";
 import { getOnlinePlayerActorCheckboxes } from "./player-service.js";
 import { requestRollsForSelectedActors } from "./request-service.js";
 
+/**
+ * Resolves a localization key and falls back to the supplied English text.
+ *
+ * @param {string} key Localization key.
+ * @param {string} fallback Text returned when the key is unavailable.
+ * @returns {string} Localized or fallback text.
+ */
 function localize(key, fallback) {
     const localized = game.i18n.localize(key);
     return localized === key ? fallback : localized;
 }
 
+/**
+ * Renders buttons for skills or saving throws.
+ *
+ * @param {[string, string, string][]} options Statistic slug, localization key, and fallback label.
+ * @param {string} className CSS class applied to each button.
+ * @returns {string} HTML button markup.
+ */
 function renderCheckButtons(options, className) {
     return options.map(([slug, labelKey, fallback]) => `
         <button
@@ -20,6 +34,11 @@ function renderCheckButtons(options, className) {
     `).join("");
 }
 
+/**
+ * Builds the main roll request dialog content.
+ *
+ * @returns {string} HTML content for the dialog.
+ */
 function getContent() {
     return `
         <div class="cinematic-rolls">
@@ -36,17 +55,28 @@ function getContent() {
                 required
             >
 
-            <h2>${localize("PF2E_CINEMATICROLLS.Sections.Skills", "Escolha uma Perícia")}</h2>
+            <label class="switchbox">
+                <input
+                    name="secret"
+                    type="checkbox"
+                >
+                <span>${localize(
+                    "PF2E_CINEMATICROLLS.Fields.SecretTest",
+                    "Secret Test"
+                )}</span>
+            </label>
+
+            <h2>${localize("PF2E_CINEMATICROLLS.Sections.Skills", "Skills")}</h2>
             <div class="skill-buttons">
                 ${renderCheckButtons(SKILLS, "skill-button")}
             </div>
 
-            <h2>${localize("PF2E_CINEMATICROLLS.Sections.Saves", "Salvamentos")}</h2>
+            <h2>${localize("PF2E_CINEMATICROLLS.Sections.Saves", "Saving Throws")}</h2>
             <div class="saving-buttons">
                 ${renderCheckButtons(SAVING_THROWS, "saving-button")}
             </div>
 
-            <h2>${localize("PF2E_CINEMATICROLLS.Sections.Actors", "Jogadores Online")}</h2>
+            <h2>${localize("PF2E_CINEMATICROLLS.Sections.Actors", "Online Players")}</h2>
             <div class="actor-list">
                 ${getOnlinePlayerActorCheckboxes()}
             </div>
@@ -54,6 +84,13 @@ function getContent() {
     `;
 }
 
+/**
+ * Reads DC and selected Actor IDs from the dialog into the current state.
+ *
+ * @param {object} dialog Foundry DialogV2 instance.
+ * @param {object} state Mutable dialog state.
+ * @returns {object} Updated dialog state.
+ */
 function readForm(dialog, state) {
     const dcInput = dialog.element.querySelector('input[name="dc"]');
     const dc = Number(dcInput?.value);
@@ -61,19 +98,29 @@ function readForm(dialog, state) {
         dialog.element.querySelectorAll('input[name="actor"]:checked'),
         checkbox => checkbox.value
     );
+    const secret = dialog.element.querySelector(
+        'input[name="secret"]'
+    )?.checked ?? false;
 
     state.dc = dc;
     state.actorIds = selectedActors;
+    state.secret = secret;
 
     return state;
 }
 
+/**
+ * Validates the values required to send roll requests.
+ *
+ * @param {object} state Dialog state to validate.
+ * @returns {boolean} Whether the state is valid.
+ */
 function validateState(state) {
     if (!Number.isInteger(state.dc) || state.dc <= 0) {
         ui.notifications.warn(
             localize(
                 "PF2E_CINEMATICROLLS.Warnings.InvalidDC",
-                "Informe uma DC inteira maior que zero."
+                "Enter a positive integer DC."
             )
         );
         return false;
@@ -83,7 +130,7 @@ function validateState(state) {
         ui.notifications.warn(
             localize(
                 "PF2E_CINEMATICROLLS.Warnings.MissingStatistic",
-                "Escolha uma perícia ou salvamento!"
+                "Choose a skill or saving throw."
             )
         );
         return false;
@@ -93,7 +140,7 @@ function validateState(state) {
         ui.notifications.warn(
             localize(
                 "PF2E_CINEMATICROLLS.Warnings.MissingActor",
-                "Selecione ao menos um Ator."
+                "Select at least one actor."
             )
         );
         return false;
@@ -103,7 +150,7 @@ function validateState(state) {
 }
 
 /**
- * Abre o diálogo principal e coordena a seleção e as rolagens.
+ * Opens the main dialog and coordinates selection and roll requests.
  */
 export function openCinematicRolls() {
     const state = {
@@ -139,10 +186,10 @@ export function openCinematicRolls() {
         },
         buttons: [
             {
-                action: "confirmar",
+                action: "confirm",
                 label: localize(
                     "PF2E_CINEMATICROLLS.Actions.Confirm",
-                    "Confirmar"
+                    "Confirm"
                 ),
                 default: true,
                 callback: async (event, button, dialog) => {
@@ -153,13 +200,14 @@ export function openCinematicRolls() {
                     const configuration = {
                         statistic: state.statisticSlug,
                         dc: state.dc,
-                        actors: state.actorIds
+                        actors: state.actorIds,
+                        secret: state.secret
                     };
 
                     console.log(
                         localize(
                             "PF2E_CINEMATICROLLS.Console.Configuration",
-                            "Cinematic Rolls | Configuração:"
+                            "Cinematic Rolls | Configuration:"
                         ),
                         configuration
                     );
@@ -167,14 +215,15 @@ export function openCinematicRolls() {
                     requestRollsForSelectedActors(
                         state.actorIds,
                         state.statisticSlug,
-                        selecionadoText(dialog, state.statisticSlug),
-                        state.dc
+                        getSelectedStatisticLabel(dialog, state.statisticSlug),
+                        state.dc,
+                        state.secret
                     );
 
                     console.log(
                         localize(
                             "PF2E_CINEMATICROLLS.Console.Requests",
-                            "Cinematic Rolls | Pedidos enviados:"
+                            "Cinematic Rolls | Requests sent:"
                         ),
                         state.actorIds
                     );
@@ -183,17 +232,24 @@ export function openCinematicRolls() {
                 }
             },
             {
-                action: "cancelar",
+                action: "cancel",
                 label: localize(
                     "PF2E_CINEMATICROLLS.Actions.Cancel",
-                    "Cancelar"
+                    "Cancel"
                 )
             }
         ]
     });
 }
 
-function selecionadoText(dialog, statisticSlug) {
+/**
+ * Reads the visible label for the selected statistic button.
+ *
+ * @param {object} dialog Foundry DialogV2 instance.
+ * @param {string} statisticSlug Selected PF2e statistic slug.
+ * @returns {string} Visible statistic label or its slug.
+ */
+function getSelectedStatisticLabel(dialog, statisticSlug) {
     const selectedButton = dialog.element.querySelector(
         `[data-skill="${statisticSlug}"]`
     );

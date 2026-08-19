@@ -1,17 +1,30 @@
+/**
+ * Escapes a value before it is inserted into generated HTML.
+ *
+ * @param {*} value Value to escape.
+ * @returns {string} HTML-safe string.
+ */
 function escapeHtml(value) {
     return foundry.utils.escapeHTML(String(value ?? ""));
 }
 
+/**
+ * Resolves a localization key and falls back to the supplied English text.
+ *
+ * @param {string} key Localization key.
+ * @param {string} fallback Text returned when the key is unavailable.
+ * @returns {string} Localized or fallback text.
+ */
 function localize(key, fallback) {
     const localized = game.i18n.localize(key);
     return localized === key ? fallback : localized;
 }
 
 /**
- * Retorna os Actors associados a usuários ativos e online.
- * Actors repetidos são retornados apenas uma vez.
+ * Returns Actors assigned to active online users.
+ * Duplicate Actors are returned only once.
  *
- * @returns {Actor[]} Actors dos jogadores online.
+ * @returns {Actor[]} Actors assigned to online players.
  */
 export function getOnlinePlayerActors() {
     const actors = new Map();
@@ -25,9 +38,9 @@ export function getOnlinePlayerActors() {
 }
 
 /**
- * Retorna o markup dos Actors dos jogadores online.
+ * Returns checkbox markup for Actors assigned to online players.
  *
- * @returns {string} HTML dos checkboxes dos jogadores online.
+ * @returns {string} HTML containing online player Actor checkboxes.
  */
 export function getOnlinePlayerActorCheckboxes() {
     const actors = getOnlinePlayerActors();
@@ -35,7 +48,7 @@ export function getOnlinePlayerActorCheckboxes() {
     if (actors.length === 0) {
         return `<p class="notes">${localize(
             "PF2E_CINEMATICROLLS.Messages.NoOnlineActors",
-            "Nenhum personagem de jogador online foi encontrado."
+            "No online player characters were found."
         )}</p>`;
     }
 

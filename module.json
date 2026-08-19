@@ -9,7 +9,7 @@
   "flags": {
     "canUpload": true
   },
-  "description": "Rola perícias e salvamentos PF2e contra uma DC para Actors selecionados.",
+  "description": "Requests PF2e skill and saving throw checks against a DC from selected Actors.",
   "socket": true,
   "esmodules": [
     "scripts/main.js"
@@ -19,9 +19,9 @@
   ],
   "languages": [
     {
-      "lang": "pt-BR",
-      "name": "Português (Brasil)",
-      "path": "lang/pt-BR.json"
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
     }
   ]
 }

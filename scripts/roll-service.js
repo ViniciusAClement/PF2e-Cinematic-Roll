@@ -1,3 +1,9 @@
+/**
+ * Converts a PF2e degree-of-success index to a stable module identifier.
+ *
+ * @param {number|null} degreeOfSuccess PF2e degree-of-success index.
+ * @returns {string|null} Stable outcome identifier, or null when unavailable.
+ */
 function getDegreeOfSuccessLabel(degreeOfSuccess) {
     return [
         "criticalFailure",
@@ -8,12 +14,18 @@ function getDegreeOfSuccessLabel(degreeOfSuccess) {
 }
 
 /**
- * Executa um Check PF2e usando a DC fornecida.
- * O sistema PF2e continua responsável pelo cálculo completo do resultado.
+ * Executes a PF2e check using the provided DC.
+ * The PF2e system remains responsible for the complete result calculation.
+ *
+ * @param {Actor} actor Actor that performs the check.
+ * @param {string} statisticSlug PF2e skill or saving throw slug.
+ * @param {number} dc Positive integer difficulty class.
+ * @param {boolean} secret Whether the result should be sent as a blind GM roll.
+ * @returns {Promise<object|null>} Check result, or null when unavailable or cancelled.
  */
-async function performPF2eCheck(actor, statisticSlug, dc) {
+async function performPF2eCheck(actor, statisticSlug, dc, secret) {
     if (!actor) {
-        console.warn("Cinematic Rolls | Actor inválido.");
+        console.warn("Cinematic Rolls | Invalid Actor.");
         return null;
     }
 
@@ -21,7 +33,7 @@ async function performPF2eCheck(actor, statisticSlug, dc) {
 
     if (!statistic) {
         console.warn(
-            `Cinematic Rolls | ${actor.name} não possui a estatística "${statisticSlug}".`
+            `Cinematic Rolls | ${actor.name} does not have the statistic "${statisticSlug}".`
         );
         return null;
     }
@@ -31,15 +43,17 @@ async function performPF2eCheck(actor, statisticSlug, dc) {
     );
 
     const roll = await statistic.roll({
+        skipDialog: true,
         dc: {
             value: dc,
             visible: true
-        }
+        },
+        ...(secret ? { rollMode: "blindroll" } : {})
     });
 
     if (!roll) {
         console.warn(
-            `Cinematic Rolls | A rolagem de ${actor.name} foi cancelada.`
+            `Cinematic Rolls | ${actor.name}'s roll was cancelled.`
         );
         return null;
     }
@@ -58,14 +72,30 @@ async function performPF2eCheck(actor, statisticSlug, dc) {
 }
 
 /**
- * Executa o Check para todos os Actors selecionados, em sequência.
+ * Executes the check for all selected Actors sequentially.
+ *
+ * @param {string[]} actorIds Selected Actor IDs.
+ * @param {string} statisticSlug PF2e skill or saving throw slug.
+ * @param {number} dc Positive integer difficulty class.
+ * @param {boolean} secret Whether the result should be sent as a blind GM roll.
+ * @returns {Promise<object[]>} Completed check results.
  */
-export async function rollForSelectedActors(actorIds, statisticSlug, dc) {
+export async function rollForSelectedActors(
+    actorIds,
+    statisticSlug,
+    dc,
+    secret = false
+) {
     const results = [];
 
     for (const actorId of actorIds) {
         const actor = game.actors.get(actorId);
-        const result = await performPF2eCheck(actor, statisticSlug, dc);
+        const result = await performPF2eCheck(
+            actor,
+            statisticSlug,
+            dc,
+            secret
+        );
 
         if (!result) continue;
 
