@@ -1,0 +1,19 @@
+{
+  "id": "pf2e-cinematicrolls",
+  "title": "PF2e-CinematicRolls",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14"
+  },
+  "flags": {
+    "canUpload": true
+  },
+  "description": "",
+  "esmodules": [
+    "scripts/main.js"
+  ],
+  "styles": [
+    "styles/cinematicrolls.css"
+  ]
+}

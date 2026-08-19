@@ -1,0 +1,41 @@
+.cinematic-rolls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cinematic-rolls h2 {
+    margin: 0 0 8px;
+}
+
+.skill-buttons,
+.saving-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.saving-buttons {
+    margin-top: 4px;
+}
+
+.skill-button,
+.saving-button {
+    border: 1px solid var(--color-border-light-2);
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        background-color 0.15s ease;
+}
+
+.skill-button.selected,
+.saving-button.selected {
+    border-color: var(--color-warm-2);
+    box-shadow:
+        0 0 0 2px
+        color-mix(
+            in srgb,
+            var(--color-warm-2) 35%,
+            transparent
+        );
+}
