@@ -1,0 +1,58 @@
+{
+    "PF2E_CINEMATICROLLS": {
+        "Title": "Cinematic Rolls",
+        "Fields": {
+            "DC": "DC"
+        },
+        "Sections": {
+            "Skills": "Escolha uma Perícia",
+            "Saves": "Salvamentos",
+            "Actors": "Jogadores Online"
+        },
+        "Actions": {
+            "Confirm": "Confirmar",
+            "Cancel": "Cancelar",
+            "Roll": "Rolar"
+        },
+        "Warnings": {
+            "InvalidDC": "Informe uma DC inteira maior que zero.",
+            "MissingStatistic": "Escolha uma perícia ou salvamento!",
+            "MissingActor": "Selecione ao menos um Ator."
+        },
+        "Messages": {
+            "NoOnlineActors": "Nenhum personagem de jogador online foi encontrado."
+        },
+        "Console": {
+            "Configuration": "Cinematic Rolls | Configuração:",
+            "Results": "Cinematic Rolls | Resultados:",
+            "Requests": "Cinematic Rolls | Pedidos enviados:"
+        },
+        "PlayerRequest": {
+            "Title": "Teste solicitado",
+            "Message": "Você precisa realizar o seguinte teste:"
+        },
+        "Skills": {
+            "Athletics": "Atletismo",
+            "Arcana": "Arcanismo",
+            "Acrobatics": "Acrobacia",
+            "Diplomacy": "Diplomacia",
+            "Stealth": "Furtividade",
+            "Deception": "Dissimulação",
+            "Intimidation": "Intimidação",
+            "Thievery": "Ladronagem",
+            "Crafting": "Manufatura",
+            "Medicine": "Medicina",
+            "Nature": "Natureza",
+            "Occultism": "Ocultismo",
+            "Performance": "Performance",
+            "Religion": "Religião",
+            "Survival": "Sobrevivência",
+            "Society": "Sociedade"
+        },
+        "Saves": {
+            "Fortitude": "Fortitude",
+            "Reflex": "Reflexo",
+            "Will": "Vontade"
+        }
+    }
+}

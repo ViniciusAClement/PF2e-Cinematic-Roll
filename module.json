@@ -9,11 +9,19 @@
   "flags": {
     "canUpload": true
   },
-  "description": "",
+  "description": "Rola perícias e salvamentos PF2e contra uma DC para Actors selecionados.",
+  "socket": true,
   "esmodules": [
     "scripts/main.js"
   ],
   "styles": [
     "styles/cinematicrolls.css"
+  ],
+  "languages": [
+    {
+      "lang": "pt-BR",
+      "name": "Português (Brasil)",
+      "path": "lang/pt-BR.json"
+    }
   ]
 }
