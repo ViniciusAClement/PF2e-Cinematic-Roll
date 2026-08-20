@@ -30,7 +30,11 @@
         },
         "PlayerRequest": {
             "Title": "Roll request",
-            "Message": "You have been asked to make the following check:"
+            "Message": "You have been asked to make the following check:",
+            "DifficultyClass": "DIFFICULTY CLASS",
+            "ClickToRoll": "Click dice to roll",
+            "Check": "{label} Check",
+            "Save": "{label} Save"
         },
         "Skills": {
             "Athletics": "Athletics",

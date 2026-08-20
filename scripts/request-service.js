@@ -1,4 +1,5 @@
 import { rollForSelectedActors } from "./roll-service.js";
+import { CINEMATIC_ASSETS } from "./assets.js";
 
 /**
  * Resolves a localization key and falls back to the supplied English text.
@@ -35,12 +36,79 @@ function openPlayerRollRequest(request) {
 
     if (!actor) {
         console.warn(
-                `Cinematic Rolls | Actor ${request.actorId} was not found on this client.`
+            `Cinematic Rolls | Actor ${request.actorId} was not found on this client.`
         );
         return;
     }
 
     let completed = false;
+
+    const outcomeLabels = {
+        criticalSuccess: "Critical Success",
+        success: "Success",
+        failure: "Failure",
+        criticalFailure: "Critical Failure"
+    };
+
+    const performRoll = async (dialog) => {
+        if (completed) return;
+        completed = true;
+
+        const dieButton = dialog?.element.querySelector(
+            ".cinematic-die-button"
+        );
+        const outcomeElement = dialog?.element.querySelector(
+            ".cinematic-roll-outcome"
+        );
+        const doneButton = dialog?.element.querySelector(
+            ".cinematic-roll-done"
+        );
+
+        dieButton?.classList.add("is-rolling");
+        if (outcomeElement) {
+            outcomeElement.textContent = "Rolling...";
+            outcomeElement.classList.add("is-visible", "is-rolling");
+        }
+
+        const [result] = await rollForSelectedActors(
+            [request.actorId],
+            request.statisticSlug,
+            request.dc,
+            request.secret
+        );
+
+        game.socket.emit("module.pf2e-cinematicrolls", {
+            type: "roll-result",
+            requestId: request.requestId,
+            requesterUserId: request.requesterUserId,
+            result: result ?? null
+        });
+
+        if (!result) return null;
+
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        if (outcomeElement) {
+            outcomeElement.textContent = outcomeLabels[result.outcome] ?? "Result";
+            outcomeElement.classList.remove("is-rolling");
+            outcomeElement.dataset.outcome = result.outcome ?? "";
+        }
+
+        doneButton?.classList.add("is-visible");
+
+        return result;
+    };
+
+    const isSave = ["fortitude", "reflex", "will"].includes(
+        String(request.statisticSlug).toLowerCase()
+    );
+    const titleTemplate = isSave
+        ? localize("PF2E_CINEMATICROLLS.PlayerRequest.Save", "{label} Save")
+        : localize("PF2E_CINEMATICROLLS.PlayerRequest.Check", "{label} Check");
+    const checkTitle = titleTemplate.replace(
+        "{label}",
+        request.statisticLabel || request.statisticSlug
+    );
 
     foundry.applications.api.DialogV2.wait({
         window: {
@@ -49,46 +117,78 @@ function openPlayerRollRequest(request) {
                 "Roll request"
             )
         },
+        render: (event, dialog) => {
+            const windowElement = dialog.element.closest(".application");
+            const targetElement = windowElement ?? dialog.element;
+
+            targetElement.classList.add("cinematic-roll-player-window");
+
+            const dieButton = dialog.element.querySelector(
+                ".cinematic-die-button"
+            );
+            const doneButton = dialog.element.querySelector(
+                ".cinematic-roll-done"
+            );
+
+            if (dieButton) {
+                dieButton.addEventListener("click", event => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    performRoll(dialog);
+                });
+            }
+
+            doneButton?.addEventListener("click", event => {
+                event.preventDefault();
+                event.stopPropagation();
+                targetElement.classList.add("is-closing");
+                dialog.close({ animate: false });
+            });
+        },
         content: `
-            <div class="cinematic-roll-request">
-                <p>
-                    ${localize(
-                        "PF2E_CINEMATICROLLS.PlayerRequest.Message",
-                        "You have been asked to make the following check:"
-                    )}
-                </p>
-                <strong>${escapeHtml(request.statisticLabel)}</strong>
-                <span>${localize("PF2E_CINEMATICROLLS.Fields.DC", "DC")}: ${request.dc}</span>
+            <div class="cinematic-roll-wrapper">
+                <h1 class="cinematic-roll-title">${escapeHtml(checkTitle)}</h1>
+                <div class="cinematic-roll-card">
+                    <div class="cinematic-card-top">
+                        <span class="cinematic-dc-label">
+                            ${localize(
+                                "PF2E_CINEMATICROLLS.PlayerRequest.DifficultyClass",
+                                "DIFFICULTY CLASS"
+                            )}
+                        </span>
+                        <span class="cinematic-dc-value">${escapeHtml(request.dc)}</span>
+                    </div>
+
+                    <div class="cinematic-card-bottom">
+                        <button
+                            type="button"
+                            class="cinematic-die-button"
+                            aria-label="${localize("PF2E_CINEMATICROLLS.Actions.Roll", "Roll")}"
+                            title="${localize("PF2E_CINEMATICROLLS.Actions.Roll", "Roll")}"
+                        >
+                            <img
+                                class="cinematic-die-icon"
+                                src="${CINEMATIC_ASSETS.icons.die}"
+                                alt="d20"
+                            >
+                        </button>
+                        <div class="cinematic-roll-outcome" aria-live="polite"></div>
+                        <button
+                            type="button"
+                            class="cinematic-roll-done"
+                            aria-label="Done"
+                        >
+                            Done
+                        </button>
+                    </div>
+                </div>
             </div>
         `,
         buttons: [
             {
                 action: "roll",
-                label: localize(
-                    "PF2E_CINEMATICROLLS.Actions.Roll",
-                    "Roll"
-                ),
-                default: true,
-                callback: async () => {
-                    if (completed) return;
-                    completed = true;
-
-                    const [result] = await rollForSelectedActors(
-                        [request.actorId],
-                        request.statisticSlug,
-                        request.dc,
-                        request.secret
-                    );
-
-                    game.socket.emit("module.pf2e-cinematicrolls", {
-                        type: "roll-result",
-                        requestId: request.requestId,
-                        requesterUserId: request.requesterUserId,
-                        result: result ?? null
-                    });
-
-                    return result;
-                }
+                label: "Roll",
+                callback: (_event, _button, dialog) => performRoll(dialog)
             }
         ]
     });
