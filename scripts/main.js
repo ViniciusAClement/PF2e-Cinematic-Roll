@@ -17,6 +17,31 @@ Hooks.once("ready", () => {
     registerRequestSocket();
 });
 
+Hooks.on("diceSoNiceRollStart", (messageId, context) => {
+    if (game.user.isGM) return;
+
+    const message = game.messages.get(messageId);
+    const hasSecretTrait = message?.flags?.pf2e?.context?.traits?.includes("secret");
+    const isBlindMessage = message?.blind || message?.rolls?.[0]?.options?.rollMode === "blindroll";
+
+    if (hasSecretTrait || isBlindMessage) {
+        context.blind = true;
+    }
+});
+
+Hooks.on("preCreateChatMessage", (message, data, options, userId) => {
+    const hasSecretTrait = message.flags?.pf2e?.context?.traits?.includes("secret");
+    const isBlindRoll = message.blind || message.rolls?.[0]?.options?.rollMode === "blindroll" || data.rollMode === "blindroll";
+
+    if (hasSecretTrait || isBlindRoll) {
+        const gmUserIds = game.users.filter(user => user.isGM).map(user => user.id);
+        message.updateSource({
+            blind: true,
+            whisper: gmUserIds
+        });
+    }
+});
+
 Hooks.on("getSceneControlButtons", controls => {
     const tokenControls = controls.tokens;
 

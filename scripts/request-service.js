@@ -89,9 +89,17 @@ function openPlayerRollRequest(request) {
         await new Promise(resolve => setTimeout(resolve, 3000));
 
         if (outcomeElement) {
-            outcomeElement.textContent = outcomeLabels[result.outcome] ?? "Result";
+            if (request.secret) {
+                outcomeElement.textContent = localize(
+                    "PF2E_CINEMATICROLLS.PlayerRequest.SecretOutcome",
+                    "Secret Roll"
+                );
+                outcomeElement.dataset.outcome = "secret";
+            } else {
+                outcomeElement.textContent = outcomeLabels[result.outcome] ?? "Result";
+                outcomeElement.dataset.outcome = result.outcome ?? "";
+            }
             outcomeElement.classList.remove("is-rolling");
-            outcomeElement.dataset.outcome = result.outcome ?? "";
         }
 
         doneButton?.classList.add("is-visible");
@@ -156,7 +164,7 @@ function openPlayerRollRequest(request) {
                                 "DIFFICULTY CLASS"
                             )}
                         </span>
-                        <span class="cinematic-dc-value">${escapeHtml(request.dc)}</span>
+                        <span class="cinematic-dc-value">${request.secret ? "?" : escapeHtml(request.dc)}</span>
                     </div>
 
                     <div class="cinematic-card-bottom">
@@ -286,6 +294,11 @@ export function requestRollsForSelectedActors(
             request
         );
 
-        game.socket.emit("module.pf2e-cinematicrolls", request);
+        if (String(user.id) === String(game.user.id)) {
+            handledRequestIds.add(request.requestId);
+            openPlayerRollRequest(request);
+        } else {
+            game.socket.emit("module.pf2e-cinematicrolls", request);
+        }
     }
 }

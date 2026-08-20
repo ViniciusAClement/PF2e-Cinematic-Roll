@@ -34,7 +34,8 @@
             "DifficultyClass": "DIFFICULTY CLASS",
             "ClickToRoll": "Click dice to roll",
             "Check": "{label} Check",
-            "Save": "{label} Save"
+            "Save": "{label} Save",
+            "SecretOutcome": "Secret Roll"
         },
         "Skills": {
             "Athletics": "Athletics",

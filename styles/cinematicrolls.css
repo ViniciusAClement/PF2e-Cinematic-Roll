@@ -249,6 +249,12 @@
     color: #e58c8c;
 }
 
+.cinematic-roll-outcome[data-outcome="secret"] {
+    color: #cbb692;
+    font-style: italic;
+    letter-spacing: 1px;
+}
+
 .cinematic-roll-done {
     display: none;
     min-width: 132px;

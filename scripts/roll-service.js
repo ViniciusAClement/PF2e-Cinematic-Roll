@@ -42,14 +42,21 @@ async function performPF2eCheck(actor, statisticSlug, dc, secret) {
         `Cinematic Rolls | ${actor.name} | ${statisticSlug} | DC ${dc}`
     );
 
-    const roll = await statistic.roll({
+    const rollOptions = {
         skipDialog: true,
         dc: {
             value: dc,
-            visible: true
-        },
-        ...(secret ? { rollMode: "blindroll" } : {})
-    });
+            visible: !secret
+        }
+    };
+
+    if (secret) {
+        rollOptions.rollMode = CONST.DICE_ROLL_MODES.BLIND;
+        rollOptions.traits = ["secret"];
+        rollOptions.extraRollOptions = ["secret", "trait:secret"];
+    }
+
+    const roll = await statistic.roll(rollOptions);
 
     if (!roll) {
         console.warn(
